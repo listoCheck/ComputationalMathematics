@@ -36,4 +36,5 @@
 4) выводится вектор неизвестных (приближенное решение слау)
 5) выводится вектор погрешностей
    
-   ![image](https://github.com/user-attachments/assets/c8ceb710-cf91-437f-bf63-0ac7a90f4926)
+   ![image](https://github.com/user-attachments/assets/99f6760d-66ee-44a0-8e17-6a07107b25d1)
+
