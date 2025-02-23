@@ -6,9 +6,8 @@ def sordDiag():
                 elements.append(0)
             else:
                 elements.append(abs(matrix[j][i]))
-        print("el", elements)
         matrix[i], matrix[elements.index(max(elements))] = matrix[elements.index(max(elements))], matrix[i]
-        print(elements.index(max(elements)))
+
 
 def firstTheorem():
     for i in range(h):
@@ -53,50 +52,66 @@ def makeMatrixs():
 def start():
     for i in range(h):
         matrix.append([float(j) for j in input().split()])
-    sordDiag()
+
+    print("Исходная матрица:")
     printMatrix()
+
+    sordDiag()
+
+    print("Преобразованная матрица:")
+    printMatrix()
+
     makeMatrixs()
-    if firstTheorem():
-        print("ok")
-    else:
-        print("bad")
+
+    if not firstTheorem():
+        print("Диагональное преобладание невозможно!")
         return False
+
     toDiag()
-    if secondTheorem():
-        print("ok")
-    else:
-        print("bad")
+
+    if not secondTheorem():
+        print("Метод не сходится!")
         return False
+
     matrixK = []
     prevMatrixK = [i for i in matrixD]
-    while True:
+    iterations = 0
+
+    while iterations < max_iter:
         for i in range(h):
             row = 0
             for j in range(h):
                 row += matrixC[i][j] * prevMatrixK[j]
             row += matrixD[i]
             matrixK.append(row)
+
         delt = 0
-        print("K", matrixK)
-        print("PK", prevMatrixK)
         for i in range(h):
             delt = max(abs(matrixK[i] - prevMatrixK[i]), delt)
-        print("delt", delt)
+
         if delt < eps:
+            print(f"Решение найдено за {iterations} итераций")
+            print("Вектор неизвестных:", matrixK)
+            print("Вектор погрешностей:", [abs(matrixK[i] - prevMatrixK[i]) for i in range(h)])
             return True
         else:
-            print("-------------------------------<next>-----------------------------------")
             prevMatrixK = matrixK
             matrixK = []
+            iterations += 1
+
+    print("Достигнуто максимальное число итераций. Решение могло не сойтись.")
+    return False
 
 
+eps = float(input("Введите точность: "))
+max_iter = int(input("Введите максимальное число итераций: "))
+h = int(input("Введите размерность матрицы: "))
 
-eps = float(input())
-h = int(input())
 matrix = []
 matrixC = []
 matrixD = []
+
 if start():
-    print("ok")
+    print("Метод успешно завершился.")
 else:
-    print("нас рано в значениях")
+    print("Решение не найдено.")
