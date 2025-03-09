@@ -26,6 +26,14 @@ def derivative_2(x):
 def derivative_3(x):
     return 6 * x ** 2 + 6.82 * x - 23.74
 
+def second_derivative_1(x):
+    return -8.28 * x - 10.84
+
+def second_derivative_2(x):
+    return 6 * x - 3.78
+
+def second_derivative_3(x):
+    return 12 * x + 6.82
 
 def plot_function(f, a, b):
     x = np.linspace(a, b, 400)
@@ -58,7 +66,15 @@ def bisection_method(f, a, b, eps):
     return
 
 
-def newton_method(f, df, x0, eps):
+def newton_method(f, df, a, b, eps, ddf):
+    if f(a) * ddf(a) > 0:
+        x0 = a
+    elif f(b) * ddf(b) > 0:
+        x0 = b
+    else:
+        print("Ошибка: на данном интервале нет корня или их несколько.")
+        return
+    plot_function(f, a, b)
     n = 0
     while True:
         x = x0 - f(x0)/df(x0)
@@ -114,8 +130,10 @@ def main():
 
         equations = {"1": equation_1, "2": equation_2, "3": equation_3}
         derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3}
+        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3}
         f = equations.get(eq_choice)
         df = derivatives.get(eq_choice)
+        ddf = second_derivatives.get(eq_choice)
 
         if not f:
             print("Некорректный выбор уравнения.")
@@ -134,7 +152,7 @@ def main():
         if method_choice == "1":
             bisection_method(f, input_data[0], input_data[1], input_data[2])
         elif method_choice == "2":
-            newton_method(f, df, input_data[0], input_data[2])
+            newton_method(f, df, input_data[0], input_data[1], input_data[2], ddf)
         elif method_choice == "3":
             simple_iteration_method(f, input_data[0], input_data[2])
         else:
