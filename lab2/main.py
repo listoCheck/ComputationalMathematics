@@ -26,14 +26,56 @@ def derivative_2(x):
 def derivative_3(x):
     return 6 * x ** 2 + 6.82 * x - 23.74
 
+
 def second_derivative_1(x):
     return -8.28 * x - 10.84
+
 
 def second_derivative_2(x):
     return 6 * x - 3.78
 
+
 def second_derivative_3(x):
     return 12 * x + 6.82
+
+
+def system_1(xy):
+    x, y = xy
+    return [x ** 2 + y ** 2 - 1, x ** 2 - y - 0.5]
+
+
+def phi1(x, y):
+    return math.sqrt(1 - y ** 2)
+
+
+def phi2(x, y):
+    return x ** 2 - 0.5
+
+
+def solve_system(system, phi1, phi2, x0, epsilon, max_iterations=1000):
+    x = np.array(x0, dtype=float)
+
+    for iterations in range(max_iterations):
+        x1 = phi1(x[0], x[1])
+        x2 = phi2(x[0], x[1])
+        x_next = np.array([x1, x2])
+
+        print(f'{iterations}. x1={x1}, x2={x2}, |xk+1 - xk|={np.linalg.norm(x_next - x)}')
+
+        if abs(system(x_next)[0]) < epsilon and abs(system(x_next)[1]) < epsilon:
+            return x_next, iterations
+
+        x = x_next
+
+    print("Метод не сошелся за заданное число итераций.")
+    return None, None
+
+
+def get_user_input_system():
+    x0, y0 = map(float, input("Введите начальные приближения x0, y0: ").split())
+    epsilon = float(input("Введите погрешность вычисления: "))
+    return (x0, y0), epsilon
+
 
 def plot_function(f, a, b):
     x = np.linspace(a, b, 400)
@@ -77,17 +119,42 @@ def newton_method(f, df, a, b, eps, ddf):
     plot_function(f, a, b)
     n = 0
     while True:
-        x = x0 - f(x0)/df(x0)
-        print(f"Найденный корень: {x}, Значение функции в x: {f(x)}, Значение производной функции в x: {df(x)}, Число итераций: {n}")
-        if (x - x0) <= eps or abs(f(x)/df(x)) <= eps or abs(f(x)) <= eps:
+        x = x0 - f(x0) / df(x0)
+        print(
+            f"Найденный корень: {x}, Значение функции в x: {f(x)}, Значение производной функции в x: {df(x)}, Число итераций: {n}")
+        if (x - x0) <= eps or abs(f(x) / df(x)) <= eps or abs(f(x)) <= eps:
             break
         n += 1
         x0 = x
+    return
 
 
-def simple_iteration_method(f, x0, tol):
-    print("Метод простой итерации заглушка")
-    return None
+def simple_iteration_method(f, df, a, b, eps, ddf):
+    def phi(x):
+        return x - f(x) / max(df(a), df(b))
+
+    if f(a) * ddf(a) > 0:
+        x0 = a
+    elif f(b) * ddf(b) > 0:
+        x0 = b
+    else:
+        print("Ошибка: не удается выбрать начальное приближение.")
+        return
+
+    print(f"Метод простой итерации. Начальное приближение: x0 = {x0}")
+
+    n = 0
+    # for i in range(5):
+    while True:
+        x1 = phi(x0)
+        print(f"Итерация {n}: x0 = {x0}, x1 = {x1}, |x1 - x0| = {abs(x1 - x0)}")
+        if abs(x1 - x0) < eps:
+            break
+        x0 = x1
+        n += 1
+
+    print(f"Найденный корень: {x1}, Число итераций: {n}")
+    return
 
 
 def get_input_from_file(filename):
@@ -121,7 +188,12 @@ def main():
         prog_type = input("Введите номер типа: ")
         if prog_type == "3":
             break
-
+        if prog_type == "2":
+            (x0, y0), epsilon = get_user_input_system()
+            solution, iterations = solve_system(system_1, phi1, phi2, (x0, y0), epsilon)
+            if solution is not None:
+                print(f"Решение: x = {solution[0]:.5f}, y = {solution[1]:.5f}, итерации: {iterations}")
+            continue
         print("Выберите уравнение:")
         print("1: -1.38*x^3 - 5.42*x^2 + 2.57*x + 10.95")
         print("2: x^3 - 1.89*x^2 - 2*x + 1.76")
@@ -154,7 +226,7 @@ def main():
         elif method_choice == "2":
             newton_method(f, df, input_data[0], input_data[1], input_data[2], ddf)
         elif method_choice == "3":
-            simple_iteration_method(f, input_data[0], input_data[2])
+            simple_iteration_method(f, df, input_data[0], input_data[1], input_data[2], ddf)
         else:
             print("Некорректный выбор метода.")
             continue
