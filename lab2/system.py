@@ -1,90 +1,222 @@
-from math import sqrt
+import math
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fsolve
+from systems import run
 
 
-def a(xy):
-    x, y = xy
-    return [x ** 2 + y ** 2 - 1, x ** 2 - y - 0.5]
+def equation_1(x):
+    return -1.38 * x ** 3 - 5.42 * x ** 2 + 2.57 * x + 10.95
 
 
-def plot_system(system):
-    x = np.linspace(-2, 2, 400)
-    y = np.linspace(-2, 2, 400)
-    X, Y = np.meshgrid(x, y)
+def equation_2(x):
+    return x ** 3 - 1.89 * x ** 2 - 2 * x + 1.76
 
-    Z1 = np.array([system([x_, y_])[0] for x_, y_ in zip(np.ravel(X), np.ravel(Y))]).reshape(X.shape)
-    Z2 = np.array([system([x_, y_])[1] for x_, y_ in zip(np.ravel(X), np.ravel(Y))]).reshape(X.shape)
 
-    plt.contour(X, Y, Z1, levels=[0], colors='r')
-    plt.contour(X, Y, Z2, levels=[0], colors='b')
-    plt.xlabel('x')
-    plt.ylabel('y')
+def equation_3(x):
+    return 2 * x ** 3 + 3.41 * x ** 2 - 23.74 * x + 2.95
+
+
+def equation_4(x):
+    return math.sin(x) + 6 * x ** 2
+
+
+def derivative_1(x):
+    return -4.14 * x ** 2 - 10.84 * x + 2.57
+
+
+def derivative_2(x):
+    return 3 * x ** 2 - 3.78 * x - 2
+
+
+def derivative_3(x):
+    return 6 * x ** 2 + 6.82 * x - 23.74
+
+
+def derivative_4(x):
+    return math.cos(x) + 12 * x
+
+
+def second_derivative_1(x):
+    return -8.28 * x - 10.84
+
+
+def second_derivative_2(x):
+    return 6 * x - 3.78
+
+
+def second_derivative_3(x):
+    return 12 * x + 6.82
+
+
+def second_derivative_4(x):
+    return -math.sin(x) + 12
+
+
+def plot_function(f, a, b):
+    x = np.linspace(a, b, 400)
+    y = [f(xi) for xi in x]
+    plt.plot(x, y, label='Функция')
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    plt.grid(True, linestyle='--', linewidth=0.5)
+    plt.legend()
     plt.show()
 
 
-def solve(a, phi1, phi2, x0, epsilon, max_iterations=1_000):
-    x = np.array(x0, dtype=float)
+def bisection_method(f, a, b, eps):
+    if f(a) * f(b) > 0:
+        print("Ошибка: на данном интервале нет корня или их несколько.")
+        return
+    plot_function(f, a, b)
+    n = 0
+    while abs(b - a) > eps:
+        x = (a + b) / 2
+        if f(x) == 0:
+            break
+        elif f(a) * f(x) < 0:
+            b = x
+        else:
+            a = x
+        n += 1
+        print(f"Найденный корень: {x}, Значение функции в корне: {f(x)}, Число итераций: {n}")
 
+    print(f"Конечный корень: {x}")
+    print(f"Значение функции в корне: {f(x)}")
+    print(f"Число итераций: {n}")
+    return
+
+
+def newton_method(f, df, a, b, eps, ddf):
+    if f(a) * ddf(a) > 0:
+        x0 = a
+    elif f(b) * ddf(b) > 0:
+        x0 = b
+    else:
+        print("Ошибка: на данном интервале нет корня или их несколько.")
+        return
+    plot_function(f, a, b)
+    n = 0
+    while True:
+        x = x0 - f(x0) / df(x0)
+        print(
+            f"Найденный корень: {x}, Значение функции в x: {f(x)}, Значение производной функции в x: {df(x)}, Число итераций: {n}")
+        if (x - x0) <= eps or abs(f(x) / df(x)) <= eps or abs(f(x)) <= eps:
+            break
+        n += 1
+        x0 = x
+
+    print(f"Конечный корень: {x}")
+    print(f"Значение функции в корне: {f(x)}")
+    print(f"Значение производной в корне: {df(x)}")
+    print(f"Число итераций: {n}")
+    return
+
+
+def simple_iteration_method(f, df, a, b, eps, ddf):
+    def phi(x):
+        return x - f(x) / max(df(a), df(b))
+
+    if f(a) * ddf(a) > 0:
+        x0 = a
+    elif f(b) * ddf(b) > 0:
+        x0 = b
+    else:
+        print("Ошибка: не удается выбрать начальное приближение.")
+        return
+
+    print(f"Метод простой итерации. Начальное приближение: x0 = {x0}")
+
+    n = 0
+    while True:
+        x1 = phi(x0)
+        print(f"Итерация {n}: x0 = {x0}, x1 = {x1}, |x1 - x0| = {abs(x1 - x0)}")
+        if abs(x1 - x0) < eps:
+            break
+        x0 = x1
+        n += 1
+
+    print(f"Конечный корень: {x1}")
+    print(f"Значение функции в корне: {f(x1)}")
+    print(f"Число итераций: {n}")
+    return
+
+
+def get_input_from_file(filename):
     try:
-        iterations = 0
-        for iterations in range(max_iterations):
-            x1 = phi1(x[0], x[1])
-            x2 = phi2(x[0], x[1])
-            x_next = np.array([x1, x2])
-
-            print(
-                f'{iterations}. x1={x1}, x2={x2}, xnext=({x_next[0]}, {x_next[1]}), |xk+1 - xk|={np.linalg.norm(x_next - x)}')
-
-            if abs(a(x_next)[0]) < epsilon and abs(a(x_next)[1]) < epsilon:
-                return x_next, iterations
-
-            x = x_next
-
-        print(f"Метод простой итерации не сошелся за заданное количество итераций ({max_iterations})!")
-        return x_next, iterations
-    except ValueError:
-        print(f'Невозможно найти phi в точке ({x0[0]}, {x0[1]})')
-        return None, None
+        with open(filename, 'r') as file:
+            data = file.readlines()
+            return [float(value.strip()) for value in data]
+    except Exception as e:
+        print(f"Ошибка чтения файла: {e}")
+        return None
 
 
-def choose_system_of_equations(functions):
-    print("Выберите систему уравнений:")
-    for key, value in functions.items():
-        print(str(key) + ": " + value[1])
-
-    try:
-        equations_number = int(input("Введите номер системы: "))
-    except ValueError:
-        print('(!) Вы ввели не число')
-        return choose_system_of_equations(functions)
-    if equations_number < 1 or equations_number > len(functions):
-        print("(!) Такого номера нет.")
-        return choose_system_of_equations(functions)
-    return equations_number
+def get_user_input():
+    choice = input("Введите имя файла для загрузки данных или оставьте пустым для ручного ввода: ").strip()
+    if choice:
+        return get_input_from_file(choice)
+    else:
+        return [
+            float(input("Введите левую границу интервала: ")),
+            float(input("Введите правую границу интервала: ")),
+            float(input("Введите погрешность вычисления: "))
+        ]
 
 
-def phi1(x, y):
-    return sqrt(1 - y ** 2)
+def main():
+    while True:
+        print("Выберите тип программы:")
+        print("1: Нелинейное уравнение")
+        print("2: Система нелинейных уравнений")
+        print("3: Выход")
+        prog_type = input("Введите номер типа: ")
+        if prog_type == "3":
+            break
+        if prog_type == "2":
+            run()
+            continue
+        print("Выберите уравнение:")
+        print("1: -1.38*x^3 - 5.42*x^2 + 2.57*x + 10.95")
+        print("2: x^3 - 1.89*x^2 - 2*x + 1.76")
+        print("3: 2*x^3 + 3.41*x^2 - 23.74*x + 2.95")
+        print("4: sin(x) + 6x^2")
+        eq_choice = input("Введите номер уравнения: ")
+
+        equations = {"1": equation_1, "2": equation_2, "3": equation_3, "4": equation_4}
+        derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3, "4": derivative_4}
+        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3,
+                              "4": second_derivative_4}
+        f = equations.get(eq_choice)
+        df = derivatives.get(eq_choice)
+        ddf = second_derivatives.get(eq_choice)
+
+        if not f:
+            print("Некорректный выбор уравнения.")
+            continue
+
+        print("Выберите метод:")
+        print("1: Метод половинного деления")
+        print("2: Метод Ньютона")
+        print("3: Метод простой итерации")
+        method_choice = input("Введите номер метода: ")
+
+        input_data = get_user_input()
+        if not input_data:
+            continue
+
+        if method_choice == "1":
+            bisection_method(f, input_data[0], input_data[1], input_data[2])
+        elif method_choice == "2":
+            newton_method(f, df, input_data[0], input_data[1], input_data[2], ddf)
+        elif method_choice == "3":
+            simple_iteration_method(f, df, input_data[0], input_data[1], input_data[2], ddf)
+        else:
+            print("Некорректный выбор метода.")
+            continue
+
+        again = input("Еще раз? [y/n]: ")
+        if again.lower() != "y":
+            break
 
 
-def phi2(x, y):
-    return x ** 2 - 0.5
-
-
-def run():
-    systems = {1: [a, "x^2 + y^2 - 1, x^2 - y - 0.5"]}
-    equations_number = choose_system_of_equations(systems)
-
-    plot_system(systems[equations_number][0])
-
-    x0, y0 = map(float, input("Введите начальные приближения x0, y0: ").split())
-    epsilon = float(input('Введите погрешность вычисления: '))
-
-    xy_solution, iterations = solve(a, phi1, phi2, (x0, y0), epsilon)
-
-    if (iterations != None):
-        print(f"\nНеизвестные: x = {xy_solution[0]:.5f}, y = {xy_solution[1]:.5f}")
-        print(f"Количество итераций: {iterations}")
-        print(f'Невязка: {a(xy_solution)[0]}, {a(xy_solution)[1]}')
+main()
