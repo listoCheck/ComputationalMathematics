@@ -71,36 +71,49 @@ def bisection_method(f, a, b, eps):
     n = 0
     while abs(b - a) > eps:
         x = (a + b) / 2
-        if f(x) == 0:
+        if abs(f(x)) <= eps:
             break
         elif f(a) * f(x) < 0:
             b = x
         else:
             a = x
         n += 1
-        print(f"Найденный корень: {x}, Значение функции в корне: {f(x)}, Число итераций: {n}")
+        print(n, x, f(x), abs(b - a))
 
     print(f"Конечный корень: {x}")
     print(f"Значение функции в корне: {f(x)}")
     print(f"Число итераций: {n}")
+    print(f"длина интервала: {b - a}")
     return
 
 
 def newton_method(f, df, a, b, eps, ddf):
+    if not (df(a) * ddf(a) > 0 and df(b) * ddf(b) > 0):
+        print("Метод расходится")
+        return
+    else:
+        print("На этом интервале условия сходимости выполняются")
     if f(a) * ddf(a) > 0:
         x0 = a
     elif f(b) * ddf(b) > 0:
         x0 = b
+
     else:
         print("Ошибка: на данном интервале нет корня или их несколько.")
         return
+    print(x0)
     plot_function(f, a, b)
     n = 0
+
     while True:
         x = x0 - f(x0) / df(x0)
         print(
             f"Найденный корень: {x}, Значение функции в x: {f(x)}, Значение производной функции в x: {df(x)}, Число итераций: {n}")
-        if (x - x0) <= eps or abs(f(x) / df(x)) <= eps or abs(f(x)) <= eps:
+        if abs(x - x0) <= eps or abs(f(x) / df(x)) <= eps or abs(f(x)) <= eps:
+            print("sadasdsad")
+            print((x - x0) <= eps)
+            print(abs(f(x) / df(x)) <= eps)
+            print(abs(f(x)) <= eps)
             break
         n += 1
         x0 = x
@@ -113,8 +126,19 @@ def newton_method(f, df, a, b, eps, ddf):
 
 
 def simple_iteration_method(f, df, a, b, eps, ddf):
+    plot_function(f, a, b)
+    k = 1
+    if df((a + b) / 2) > 0:
+        k = -1
+
+    def dphi(x):
+        return 1 + df(x) / (max(abs(df(a)), abs(df(b))) * k)
+
     def phi(x):
-        return x - f(x) / max(df(a), df(b))
+        return x + f(x) / (max(abs(df(a)), abs(df(b))) * k)
+
+    print(dphi(a), dphi(b))
+    print(1 / (max(df(a), df(b)) * k))
 
     if f(a) * ddf(a) > 0:
         x0 = a
@@ -130,7 +154,7 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
     while True:
         x1 = phi(x0)
         print(f"Итерация {n}: x0 = {x0}, x1 = {x1}, |x1 - x0| = {abs(x1 - x0)}")
-        if abs(x1 - x0) < eps:
+        if abs(f(x1)) < eps:
             break
         x0 = x1
         n += 1
