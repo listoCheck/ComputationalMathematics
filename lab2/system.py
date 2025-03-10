@@ -35,7 +35,7 @@ def solve(a, phi1, phi2, x0, epsilon, max_iterations=1_000):
             x_next = np.array([x1, x2])
 
             print(
-                f'{iterations}. x1={x1}, x2={x2}, xnext=({x_next[0]}, {x_next[1]}), |xk+1 - xk|={np.linalg.norm(x_next - x)}')
+                f'{iterations}. x1={x1}, x2={x2}, |xk+1 - xk|={np.linalg.norm(x_next - x)}')
 
             if abs(a(x_next)[0]) < epsilon and abs(a(x_next)[1]) < epsilon:
                 return x_next, iterations
