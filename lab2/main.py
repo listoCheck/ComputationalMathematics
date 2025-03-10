@@ -137,6 +137,14 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
     def phi(x):
         return x + f(x) / (max(abs(df(a)), abs(df(b))) * k)
 
+    if abs(dphi(a)) > 1 or abs(dphi(b)):
+        print(
+            "Так как один из 𝝋` на границе принимет значения больше единицы, то метод скорее всего расходится.\nЧтобы продолжить напишите 1, чтобы закончить 0")
+        if int(input()) == 0:
+            print("завершение метода")
+            return
+        else:
+            print("продолжаем")
     print(dphi(a), dphi(b))
     print(1 / (max(df(a), df(b)) * k))
 
@@ -217,7 +225,7 @@ def main():
         if not f:
             print("Некорректный выбор уравнения.")
             continue
-
+        plot_function(f, -5, 5)
         print("Выберите метод:")
         print("1: Метод половинного деления")
         print("2: Метод Ньютона")
@@ -227,6 +235,7 @@ def main():
         input_data = get_user_input()
         if not input_data:
             continue
+
 
         if method_choice == "1":
             bisection_method(f, input_data[0], input_data[1], input_data[2])
