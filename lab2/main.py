@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from systems import run
 
 
 def equation_1(x):
@@ -15,6 +16,10 @@ def equation_3(x):
     return 2 * x ** 3 + 3.41 * x ** 2 - 23.74 * x + 2.95
 
 
+def equation_4(x):
+    return math.sin(x) + 6 * x ** 2
+
+
 def derivative_1(x):
     return -4.14 * x ** 2 - 10.84 * x + 2.57
 
@@ -25,6 +30,10 @@ def derivative_2(x):
 
 def derivative_3(x):
     return 6 * x ** 2 + 6.82 * x - 23.74
+
+
+def derivative_4(x):
+    return math.cos(x) + 12 * x
 
 
 def second_derivative_1(x):
@@ -39,42 +48,8 @@ def second_derivative_3(x):
     return 12 * x + 6.82
 
 
-def system_1(xy):
-    x, y = xy
-    return [x ** 2 + y ** 2 - 1, x ** 2 - y - 0.5]
-
-
-def phi1(x, y):
-    return math.sqrt(1 - y ** 2)
-
-
-def phi2(x, y):
-    return x ** 2 - 0.5
-
-
-def solve_system(system, phi1, phi2, x0, epsilon, max_iterations=1000):
-    x = np.array(x0, dtype=float)
-
-    for iterations in range(max_iterations):
-        x1 = phi1(x[0], x[1])
-        x2 = phi2(x[0], x[1])
-        x_next = np.array([x1, x2])
-
-        print(f'{iterations}. x1={x1}, x2={x2}, |xk+1 - xk|={np.linalg.norm(x_next - x)}')
-
-        if abs(system(x_next)[0]) < epsilon and abs(system(x_next)[1]) < epsilon:
-            return x_next, iterations
-
-        x = x_next
-
-    print("Метод не сошелся за заданное число итераций.")
-    return None, None
-
-
-def get_user_input_system():
-    x0, y0 = map(float, input("Введите начальные приближения x0, y0: ").split())
-    epsilon = float(input("Введите погрешность вычисления: "))
-    return (x0, y0), epsilon
+def second_derivative_4(x):
+    return -math.sin(x) + 12
 
 
 def plot_function(f, a, b):
@@ -189,20 +164,18 @@ def main():
         if prog_type == "3":
             break
         if prog_type == "2":
-            (x0, y0), epsilon = get_user_input_system()
-            solution, iterations = solve_system(system_1, phi1, phi2, (x0, y0), epsilon)
-            if solution is not None:
-                print(f"Решение: x = {solution[0]:.5f}, y = {solution[1]:.5f}, итерации: {iterations}")
+            run()
             continue
         print("Выберите уравнение:")
         print("1: -1.38*x^3 - 5.42*x^2 + 2.57*x + 10.95")
         print("2: x^3 - 1.89*x^2 - 2*x + 1.76")
         print("3: 2*x^3 + 3.41*x^2 - 23.74*x + 2.95")
+        print("4: sin(x) + 6x^2")
         eq_choice = input("Введите номер уравнения: ")
 
-        equations = {"1": equation_1, "2": equation_2, "3": equation_3}
-        derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3}
-        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3}
+        equations = {"1": equation_1, "2": equation_2, "3": equation_3, "4": equation_4}
+        derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3, "4": derivative_4}
+        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3, "4": second_derivative_4}
         f = equations.get(eq_choice)
         df = derivatives.get(eq_choice)
         ddf = second_derivatives.get(eq_choice)
