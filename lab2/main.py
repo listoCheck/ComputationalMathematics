@@ -80,6 +80,10 @@ def bisection_method(f, a, b, eps):
         n += 1
         print(f"Найденный корень: {x}, Значение функции в корне: {f(x)}, Число итераций: {n}")
 
+    # Вывод конечных истинных данных
+    print(f"Конечный корень: {x}")
+    print(f"Значение функции в корне: {f(x)}")
+    print(f"Число итераций: {n}")
     return
 
 
@@ -101,6 +105,12 @@ def newton_method(f, df, a, b, eps, ddf):
             break
         n += 1
         x0 = x
+
+    # Вывод конечных истинных данных
+    print(f"Конечный корень: {x}")
+    print(f"Значение функции в корне: {f(x)}")
+    print(f"Значение производной в корне: {df(x)}")
+    print(f"Число итераций: {n}")
     return
 
 
@@ -119,7 +129,6 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
     print(f"Метод простой итерации. Начальное приближение: x0 = {x0}")
 
     n = 0
-    # for i in range(5):
     while True:
         x1 = phi(x0)
         print(f"Итерация {n}: x0 = {x0}, x1 = {x1}, |x1 - x0| = {abs(x1 - x0)}")
@@ -128,7 +137,10 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
         x0 = x1
         n += 1
 
-    print(f"Найденный корень: {x1}, Число итераций: {n}")
+    # Вывод конечных истинных данных
+    print(f"Конечный корень: {x1}")
+    print(f"Значение функции в корне: {f(x1)}")
+    print(f"Число итераций: {n}")
     return
 
 
@@ -175,7 +187,8 @@ def main():
 
         equations = {"1": equation_1, "2": equation_2, "3": equation_3, "4": equation_4}
         derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3, "4": derivative_4}
-        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3, "4": second_derivative_4}
+        second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3,
+                              "4": second_derivative_4}
         f = equations.get(eq_choice)
         df = derivatives.get(eq_choice)
         ddf = second_derivatives.get(eq_choice)
