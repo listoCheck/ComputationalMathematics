@@ -20,6 +20,10 @@ def equation_4(x):
     return math.sin(x) + 6 * x ** 2
 
 
+def equation_5(x):
+    return 4.45 * x ** 3 + 7.81 * x ** 2 - 9.62 * x - 8.17
+
+
 def derivative_1(x):
     return -4.14 * x ** 2 - 10.84 * x + 2.57
 
@@ -36,6 +40,10 @@ def derivative_4(x):
     return math.cos(x) + 12 * x
 
 
+def derivative_5(x):
+    return 13.35 * x ** 2 + 15.62 * x - 9.62
+
+
 def second_derivative_1(x):
     return -8.28 * x - 10.84
 
@@ -50,6 +58,10 @@ def second_derivative_3(x):
 
 def second_derivative_4(x):
     return -math.sin(x) + 12
+
+
+def second_derivative_5(x):
+    return 26.7 * x + 15.62
 
 
 def plot_function(f, a, b):
@@ -137,7 +149,7 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
     def phi(x):
         return x + f(x) / (max(abs(df(a)), abs(df(b))) * k)
 
-    if abs(dphi(a)) > 1 or abs(dphi(b)):
+    if abs(dphi(a)) > 1 or abs(dphi(b)) > 1:
         print(
             "Так как один из 𝝋` на границе принимет значения больше единицы, то метод скорее всего расходится.\nЧтобы продолжить напишите 1, чтобы закончить 0")
         if int(input()) == 0:
@@ -146,7 +158,6 @@ def simple_iteration_method(f, df, a, b, eps, ddf):
         else:
             print("продолжаем")
     print(dphi(a), dphi(b))
-    print(1 / (max(df(a), df(b)) * k))
 
     if f(a) * ddf(a) > 0:
         x0 = a
@@ -212,12 +223,13 @@ def main():
         print("2: x^3 - 1.89*x^2 - 2*x + 1.76")
         print("3: 2*x^3 + 3.41*x^2 - 23.74*x + 2.95")
         print("4: sin(x) + 6x^2")
+        print("5: 4.45 * x^3 + 7.81 * x^2 - 9.62 * x - 8.17")
         eq_choice = input("Введите номер уравнения: ")
 
-        equations = {"1": equation_1, "2": equation_2, "3": equation_3, "4": equation_4}
-        derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3, "4": derivative_4}
+        equations = {"1": equation_1, "2": equation_2, "3": equation_3, "4": equation_4, "5": equation_5}
+        derivatives = {"1": derivative_1, "2": derivative_2, "3": derivative_3, "4": derivative_4, "5": derivative_5}
         second_derivatives = {"1": second_derivative_1, "2": second_derivative_2, "3": second_derivative_3,
-                              "4": second_derivative_4}
+                              "4": second_derivative_4, "5": second_derivative_5}
         f = equations.get(eq_choice)
         df = derivatives.get(eq_choice)
         ddf = second_derivatives.get(eq_choice)
@@ -235,7 +247,6 @@ def main():
         input_data = get_user_input()
         if not input_data:
             continue
-
 
         if method_choice == "1":
             bisection_method(f, input_data[0], input_data[1], input_data[2])
