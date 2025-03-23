@@ -51,11 +51,13 @@ def phi2_system2(x, y):
 
 
 def phi1_system3(x, y):
-    return math.sqrt(3 - math.pow(math.e, x))
-
+    if 3 - y**2 < 0:
+        return -math.log(abs(3 - y**2))
+    else:
+        return math.log(3 - y**2)
 
 def phi2_system3(x, y):
-    return math.sqrt(1 - y)
+    return 1 - x**2
 
 
 def check_convergence(phi1, phi2, x0, y0):
