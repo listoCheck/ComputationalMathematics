@@ -318,7 +318,7 @@ def main():
             x, y = read_data_from_input()
             n = len(x)
             break
-        elif option == 'e':
+        elif option == 'a':
             h = 0.4
             x0 = 0
             n = 11
@@ -328,7 +328,7 @@ def main():
             y = [round(f(x), 2) for x in x]
             break
         else:
-            print("Некорректный ввод.")
+            print("Не понимай")
 
     print("X: ", x)
     print("Y: ", y)
@@ -365,13 +365,18 @@ def main():
             ]
 
     with open('out.txt', 'w') as output:
-        option = input("Вывод в файл 'f' или в терминал 't'? [f/t] ")
-        if option == 'f':
-            print("Выбран вариант вывода в файл 'out.txt'")
-            sys.stdout = output
-        else:
-            print("Выбран вариант вывода в терминал.")
-            print('\n' + ('-' * 30) + '\n')
+        while True:
+            option = input("Вывод в файл 'f' или в терминал 't'? [f/t] ")
+            if option == 'f':
+                print("Выбран вариант вывода в файл 'out.txt'")
+                sys.stdout = output
+                break
+            elif option == 't':
+                print("Выбран вариант вывода в терминал.")
+                print('\n' + ('-' * 30) + '\n')
+                break
+            else:
+                print("Не понимай")
 
         run(functions, x, y, n)
 
