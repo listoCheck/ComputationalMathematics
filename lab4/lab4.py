@@ -64,6 +64,7 @@ def linear_approximation(xs, ys, n):
             [sx, sxx]
         ],
         [sy, sxy], 2)
+    #a, b = np.polyfit(xs, ys, 1)
     return lambda xi: a + b * xi, a, b
 
 
@@ -84,6 +85,7 @@ def quadratic_approximation(xs, ys, n):
         [sy, sxy, sxxy],
         3
     )
+    #a, b, c = np.polyfit(xs, ys, 2)
     return lambda xi: a + b * xi + c * xi ** 2, a, b, c
 
 
@@ -108,12 +110,12 @@ def cubic_approximation(xs, ys, n):
         [sy, sxy, sxxy, sxxxy],
         4
     )
+    #a, b, c, d = np.polyfit(xs, ys, 3)
     return lambda xi: a + b * xi + c * xi ** 2 + d * xi ** 3, a, b, c, d
 
 
 def exponential_approximation(xs, ys, n):
-    ys_ = list(map(log, ys))
-    trash, a, b = linear_approximation(xs, ys_, n)
+    trash, a, b = linear_approximation(xs, list(map(log, ys)), n)
     return lambda xi: exp(a) * exp(b * xi), exp(a), b
 
 
@@ -200,9 +202,11 @@ def run(functions, x, y, n):
             r2 = compute_coefficient_of_determination(x, y, fi, n)
 
             if mse <= best_mse:
-                mses.append((mse, name))
+                mses.append((mse, name, fi, r2))
                 best_mse = mse
                 best_func = name
+                best_fi = fi
+
 
             draw_func(fi, name, x)
 
@@ -247,12 +251,16 @@ def run(functions, x, y, n):
         print('\n' + ('-' * 30) + '\n')
 
     best_funcs = []
-    for m, n in mses:
+
+    for m, n, fi, r2 in mses:
         if abs(m - best_mse) < 0.0000001:
             best_funcs.append(n)
-
     if len(best_funcs) == 1:
-        print(f"Лучшая функция приближения: {best_func}")
+        print(f"Лучшая модель: {best_func}, σ = {best_mse:.6g}")
+        print(f"{'i':>3} {'x_i':>10} {'y_i':>10} {'φ(x_i)':>12} {'ei':>12}")
+        for i, (xi, yi) in enumerate(zip(x, y), 1):
+            print(f"{i:>3d} {xi:>10.6g} {yi:>10.6g} {best_fi(xi):>12.6g} {yi - best_fi(xi):>12.6g}")
+
     else:
         print(f"Лучшие функции приближения:")
         for n in best_funcs:
@@ -274,7 +282,7 @@ def read_data_from_file(filename):
 
         return x, y, None
     except IOError as err:
-        return None, None, "! Невозможно прочитать файл {0}: {1}".format(filename, err)
+        return None, None, "Невозможно прочитать файл {0}: {1}".format(filename, err)
 
 
 def read_data_from_input():
@@ -289,10 +297,10 @@ def read_data_from_input():
             y.append(float(point[1]))
         else:
             if str != 'quit':
-                print("! Неправильный ввод. Введенная точка не будет использована.")
+                print("Неправильный ввод. Введенная точка не будет использована.")
     return x, y
 
-
+f = lambda xi: 15 * xi / (xi ** 4 + 2)
 def main():
     while True:
         option = input("Напишите 'f' для ввода из файла, 'a' для задания или 't' для ввода с клавиатуры: ")
@@ -322,7 +330,7 @@ def main():
             h = 0.4
             x0 = 0
             n = 11
-            f = lambda xi: 15 * xi / (xi ** 4 + 2)
+
 
             x = [round(x0 + i * h, 2) for i in range(n)]
             y = [round(f(x), 2) for x in x]
