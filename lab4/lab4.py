@@ -206,6 +206,7 @@ def run(functions, x, y, n):
                 best_mse = mse
                 best_func = name
                 best_fi = fi
+                best_coefs = coeffs
 
 
             draw_func(fi, name, x)
@@ -213,7 +214,7 @@ def run(functions, x, y, n):
             print(f"{name} функция:")
             print(f"*  Функция: f(x) =", get_str_content_of_func(fi))
             print(f"*  Коэффициенты {get_coeffs_str(coeffs)}: {list(map(lambda cf: round(cf, 4), coeffs))}")
-            print(f"*  Среднеквадратичное отклонение: σ = {mse:.5f}")
+            print(f"*  Среднеквадратичное отклонение: sigma = {mse:.5f}")
             if r2 >= 0.95:
                 r2_status = 'высокая точность аппроксимации (модель хорошо описывает явление)'
             elif r2 >= 0.75:
@@ -256,8 +257,8 @@ def run(functions, x, y, n):
         if abs(m - best_mse) < 0.0000001:
             best_funcs.append(n)
     if len(best_funcs) == 1:
-        print(f"Лучшая модель: {best_func}, σ = {best_mse:.6g}")
-        print(f"{'i':>3} {'x_i':>10} {'y_i':>10} {'φ(x_i)':>12} {'ei':>12}")
+        print(f"Лучшая модель: {best_func}, sigma = {best_mse:.6g}")
+        print(f"{'i':>3} {'x_i':>10} {'y_i':>10} {'fi(x_i)':>12} {'ei':>12}")
         for i, (xi, yi) in enumerate(zip(x, y), 1):
             print(f"{i:>3d} {xi:>10.6g} {yi:>10.6g} {best_fi(xi):>12.6g} {yi - best_fi(xi):>12.6g}")
 
