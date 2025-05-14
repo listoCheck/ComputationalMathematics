@@ -1,20 +1,232 @@
 from math import sin, sqrt
+from copy import copy
 from functools import reduce
+from math import factorial
+import numpy as np
+from matplotlib import pyplot as plt
+
 
 def lagrange(xs, ys, n):
-    ls = []
     return lambda x: sum([
         ys[i] * reduce(
-            lambda a, b: a * b, [(x - xs[i]) / (xs[i] - xs[j])
-        for j in range(n) if i != j])
-    for i in range(n)
+            lambda a, b: a * b,
+                        [(x - xs[j]) / (xs[i] - xs[j])
+            for j in range(n) if i != j])
+        for i in range(n)])
+
+
+def divided_differences(x, y):
+    n = len(y)
+    coef = np.copy(y).astype(float)
+    for j in range(1, n):
+        for i in range(n-1, j-1, -1):
+            coef[i] = (coef[i] - coef[i-1]) / (x[i] - x[i-j])
+    return coef
+
+
+def newton_divided_difference_polynomial(xs, ys, n):
+    coef = divided_differences(xs, ys)
+    return lambda x: ys[0] + sum([
+        coef[k] * reduce(lambda a, b: a * b, [x - xs[j] for j in range(k)]) for k in range(1, n)
     ])
 
 
+def finite_differences(y):
+    n = len(y)
+    delta_y = np.zeros((n, n))
+    delta_y[:,0] = y
+    for j in range(1, n):
+        for i in range(n-j):
+            delta_y[i,j] = delta_y[i+1,j-1] - delta_y[i,j-1]
+    return delta_y
+
+
+def print_finite_differences_table(delta_y):
+    n = delta_y.shape[0]
+    print("Таблица конечных разностей:")
+    for i in range(n):
+        row = [f"{delta_y[i, j]:.4f}" if i + j < n else "" for j in range(n)]
+        print("\t".join(row))
+
+
+def find_fin_difs(ys, n):
+    fin_difs = [ys[:]]
+    for i in range(1, n):
+        prev = fin_difs[-1]
+        fin_difs.append([prev[j + 1] - prev[j] for j in range(len(prev) - 1)])
+    return fin_difs
+
+def gauss(xs, ys, n):
+    n = len(xs) - 1
+    alpha_ind = n // 2
+    fin_difs = [ys[:]]
+
+    for k in range(1, n + 1):
+        last = fin_difs[-1][:]
+        fin_difs.append(
+            [last[i + 1] - last[i] for i in range(n - k + 1)])
+
+    h = xs[1] - xs[0]
+    dts1 = [0, -1, 1, -2, 2, -3, 3, -4, 4]
+    f1 = lambda x: ys[alpha_ind] + sum([
+        reduce(lambda a, b: a * b,
+               [(x - xs[alpha_ind]) / h + dts1[j] for j in range(k)])
+        * fin_difs[k][len(fin_difs[k]) // 2] / factorial(k)
+        for k in range(1, n + 1)])
+
+    f2 = lambda x: ys[alpha_ind] + sum([
+        reduce(lambda a, b: a * b,
+               [(x - xs[alpha_ind]) / h - dts1[j] for j in range(k)])
+        * fin_difs[k][len(fin_difs[k]) // 2 - (1 - len(fin_difs[k]) % 2)] / factorial(k)
+        for k in range(1, n + 1)])
+
+    return lambda x: f1(x) if x > xs[alpha_ind] else f2(x)
+
+
+
+def stirling_polynomial(xs, ys, n):
+    assert n % 2 == 1, "Для интерполяции Стирлинга нужно нечетное число точек"
+    h = xs[1] - xs[0]
+    m = n // 2
+    a = xs[m]
+
+    fin_difs = find_fin_difs(ys, n)
+
+    def stirling(x):
+        t = (x - a) / h
+        result = ys[m]
+        fact = 1
+        t2 = 1
+        sign = 1
+
+        for k in range(1, n):
+            fact *= k
+            if k % 2 == 1:
+                idx = m - k // 2
+                term = (t * t2 * (fin_difs[k][idx] + fin_difs[k][idx - 1]) / 2) / fact
+                t2 *= (t**2 - ((k // 2) ** 2))
+            else:
+                idx = m - k // 2
+                term = (t2 * fin_difs[k][idx]) / fact
+                t2 *= (t**2 - ((k // 2) ** 2))
+
+            result += term
+
+        return result
+
+    return stirling
+
+
+
+def bessel_polynomial(xs, ys, n):
+    assert n % 2 == 0, "Для интерполяции Бесселя нужно чётное число точек"
+    h = xs[1] - xs[0]
+    m = n // 2
+    a = (xs[m - 1] + xs[m]) / 2
+
+    fin_difs = find_fin_difs(ys, n)
+
+    def bessel(x):
+        t = (x - a) / h
+        result = (ys[m] + ys[m - 1]) / 2
+        fact = 1
+        t2 = 1
+        sign = 1
+
+        for k in range(1, n):
+            fact *= k
+            if k % 2 == 1:
+                idx = m - (k // 2) - 2
+                delta1 = fin_difs[k][idx]
+                delta2 = fin_difs[k][idx + 1]
+                term = (t * t2 * (delta1 + delta2) / 2) / fact
+                t2 *= (t**2 - (k // 2) ** 2)
+            else:
+                idx = m - (k // 2)
+                term = (t2 * fin_difs[k][idx]) / fact
+                t2 *= (t**2 - (k // 2) ** 2)
+
+            result += term
+
+        return result
+
+    return bessel
+
+
+
+
+def draw_plot(a, b, func, name, dx=0.001):
+    xs, ys = [], []
+    a -= dx
+    b += dx
+    x = a
+    while x <= b:
+        xs.append(x)
+        ys.append(func(x))
+        x += dx
+    plt.plot(xs, ys, 'g', label=name)
+
+
 def solve(xs, ys, x, n):
-    return
+    delta_y = finite_differences(ys)
+    print_finite_differences_table(delta_y)
+
+    print('\n' + '-' * 60)
+
+    methods = [("Многочлен Лагранжа", lagrange),
+               ("Многочлен Ньютона с разделенными разностями", newton_divided_difference_polynomial),
+               ("Многочлен Гаусса", gauss),
+               ("Многочлен Стирлинга", stirling_polynomial),
+               ("Многочлен Бесселя", bessel_polynomial)]
+
+    for name, method in methods:
+        finite_difference = True
+        last = xs[1] - xs[0]
+        for i in range(1, n):
+            new = abs(xs[i] - xs[i - 1])
+            if abs(new - last) > 0.0001:
+                finite_difference = False
+            last = new
 
 
+
+        #if (method is newton_divided_difference_polynomial) and finite_difference: continue
+
+        if (method is gauss or method is stirling_polynomial) and len(xs) % 2 == 0: continue
+
+        if method is bessel_polynomial and len(xs) % 2 == 1: continue
+
+        h = xs[1] - xs[0]
+        alpha_ind = n // 2
+        t = (x - xs[alpha_ind]) / h
+        if method is bessel_polynomial:
+            if not (0.25 < abs(t) < 0.75):
+                print(f'значение t слишком велико ({t}) для метода Бесселя, посчитать этот метод? (y/n) ')
+                if input().lower() == "n":
+                    continue
+
+        if method is stirling_polynomial:
+            if not (abs(t) <= 0.25):
+                print(f'значение t слишком велико ({t}) для метода Стирлинга, посчитать этот метод? (y/n) ')
+                if input().lower() == "n":
+                    continue
+
+        print("t: ", t)
+
+        print(name)
+        P = method(xs, ys, n)
+        print(f'P({x}) = {P(x)}')
+        print('-' * 60)
+
+        plt.title(name)
+        draw_plot(xs[0], xs[-1], P, name)
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.scatter(x, P(x), c='r')
+        for i in range(len(xs)):
+            plt.scatter(xs[i], ys[i], c='b')
+
+        plt.show()
 def read_data_from_file(filename):
     try:
         with open(filename, 'r') as file:
@@ -73,15 +285,15 @@ def read_data_from_function():
     while True:
         input_func = int(input('Выберите функцию [1/2/3]: '))
         if input_func == 1:
-            f = lambda x: 2 * x ** 2 - 5 * x
+            f = lambda x: 2*x**2 - 5*x
             break
         elif input_func == 2:
-            f = lambda x: x ** 5
+            f = lambda x: x**5
             break
         elif input_func == 3:
             f = lambda x: sin(x)
             break
-        elif input_func == 4:
+        elif input_func ==4:
             f = lambda x: sqrt(x)
             break
         else:
@@ -102,8 +314,7 @@ def read_data_from_function():
 def main():
     while True:
         while True:
-            print(
-                "Введите 'fi' для ввода из файла; 'e' для задания вычислительной части; 't' для ввода с терминала; 'fu' для задания функции.")
+            print("Введите: 'fi' для ввода из файла; 'e' для задания вычислительной части; 't' для ввода с терминала; 'fu' для задания функции.")
             option = input("Ваш ввод: ")
             if option == 'fi':
                 while True:
@@ -144,7 +355,7 @@ def main():
         else:
             break
 
-    # solve(xs, ys, x, n)
+    solve(xs, ys, x, n)
 
 
 if __name__ == "__main__":
