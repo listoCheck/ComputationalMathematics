@@ -85,6 +85,7 @@ def gauss(xs, ys, n):
 
 
 def stirling_polynomial(xs, ys, n):
+    print("Делаем интерполяцию Стирлинга, колиество точек нечетное")
     assert n % 2 == 1, "Для интерполяции Стирлинга нужно нечетное число точек"
     h = xs[1] - xs[0]
     m = n // 2
@@ -92,24 +93,22 @@ def stirling_polynomial(xs, ys, n):
 
     fin_difs = find_fin_difs(ys, n)
 
+
     def stirling(x):
         t = (x - a) / h
         result = ys[m]
         fact = 1
         t2 = 1
-        sign = 1
 
         for k in range(1, n):
             fact *= k
+            idx = m - k // 2
             if k % 2 == 1:
-                idx = m - k // 2
                 term = (t * t2 * (fin_difs[k][idx] + fin_difs[k][idx - 1]) / 2) / fact
-                t2 *= (t**2 - ((k // 2) ** 2))
+                t2 *= (t ** 2 - ((k // 2) ** 2))
             else:
-                idx = m - k // 2
                 term = (t2 * fin_difs[k][idx]) / fact
-                t2 *= (t**2 - ((k // 2) ** 2))
-
+                t2 *= (t ** 2 - ((k // 2 - 1) ** 2))
             result += term
 
         return result
@@ -119,6 +118,7 @@ def stirling_polynomial(xs, ys, n):
 
 
 def bessel_polynomial(xs, ys, n):
+    print("Делаем интерполяцию Бесселя, колиество точек четное")
     assert n % 2 == 0, "Для интерполяции Бесселя нужно чётное число точек"
     h = xs[1] - xs[0]
     m = n // 2
@@ -131,8 +131,6 @@ def bessel_polynomial(xs, ys, n):
         result = (ys[m] + ys[m - 1]) / 2
         fact = 1
         t2 = 1
-        sign = 1
-
         for k in range(1, n):
             fact *= k
             if k % 2 == 1:
@@ -140,16 +138,12 @@ def bessel_polynomial(xs, ys, n):
                 delta1 = fin_difs[k][idx]
                 delta2 = fin_difs[k][idx + 1]
                 term = (t * t2 * (delta1 + delta2) / 2) / fact
-                t2 *= (t**2 - (k // 2) ** 2)
             else:
                 idx = m - (k // 2)
                 term = (t2 * fin_difs[k][idx]) / fact
-                t2 *= (t**2 - (k // 2) ** 2)
-
+            t2 *= (t ** 2 - (k // 2) ** 2)
             result += term
-
         return result
-
     return bessel
 
 
@@ -192,25 +186,90 @@ def solve(xs, ys, x, n):
 
         #if (method is newton_divided_difference_polynomial) and finite_difference: continue
 
-        if (method is gauss or method is stirling_polynomial) and len(xs) % 2 == 0: continue
+        if (method is stirling_polynomial) and len(xs) % 2 == 0:
+            #continue
+            print("добавить промежуточную точку из метода Лагранжа, чтобы посчитать метод Стиринга? (y/n)")
+            if 'y' == input():
+                p = lagrange(xs, ys, n)
+                newx = xs
+                newx.append(xs[-1] - 0.2)
+                newy = ys
+                newy.append(p(xs[-1] - 0.2))
+                newx.sort()
+                newy.sort()
+                p2 = stirling_polynomial(newx, newx, n + 1)
+                h = newx[1] - newx[0]
+                alpha_ind = (n + 1) // 2
+                newt = (x - newx[alpha_ind]) / h
+                print("t: ", newt)
+                print(name)
+                print(f'P({x}) = {p2(x)}')
+                print('-' * 60)
 
-        if method is bessel_polynomial and len(xs) % 2 == 1: continue
+                plt.title(name)
+                draw_plot(newx[0], newx[-1], p2, name)
+                plt.xlabel("X")
+                plt.ylabel("Y")
+                plt.scatter(x, p2(x), c='r')
+                for i in range(len(newx)):
+                    plt.scatter(newx[i], newy[i], c='b')
+
+                plt.show()
+                continue
+            else:
+                continue
+        if method is bessel_polynomial and len(xs) % 2 == 1:
+            #continue
+            print("добавить промежуточную точку из метода Лагранжа, чтобы посчитать метод Бесселя? (y/n)")
+            if 'y' == input():
+                p = lagrange(xs, ys, n)
+                newx = xs
+                newx.append(xs[-1]-0.2)
+                newy = ys
+
+                newy.append(p(xs[-1]-0.2))
+                newx.sort()
+                newy.sort()
+                print("newy", newy)
+                p2 = bessel_polynomial(newx, newy, n + 1)
+                h = newx[1] - newx[0]
+                alpha_ind = (n + 1) // 2
+                newt = (x - newx[alpha_ind]) / h
+                print("t: ", newt)
+                print(name)
+                print(f'P({x}) = {p2(x)}')
+                print('-' * 60)
+                plt.title(name)
+                draw_plot(newx[0], newx[-1], p2, name)
+                plt.xlabel("X")
+                plt.ylabel("Y")
+                plt.scatter(x, p2(x), c='r')
+                for i in range(len(newx)):
+                    plt.scatter(newx[i], newy[i], c='b')
+                plt.show()
+                continue
+            else:
+                continue
+
+
 
         h = xs[1] - xs[0]
         alpha_ind = n // 2
         t = (x - xs[alpha_ind]) / h
+
+        """
         if method is bessel_polynomial:
             if not (0.25 < abs(t) < 0.75):
-                print(f'значение t слишком велико ({t}) для метода Бесселя, посчитать этот метод? (y/n) ')
+                print(f'значение модуля t слишком велико ({abs(t)}) для метода Бесселя, посчитать этот метод? (y/n) ')
                 if input().lower() == "n":
                     continue
 
         if method is stirling_polynomial:
             if not (abs(t) <= 0.25):
-                print(f'значение t слишком велико ({t}) для метода Стирлинга, посчитать этот метод? (y/n) ')
+                print(f'значение модуля t слишком велико ({abs(t)}) для метода Стирлинга, посчитать этот метод? (y/n) ')
                 if input().lower() == "n":
                     continue
-
+        """
         print("t: ", t)
 
         print(name)
@@ -354,7 +413,8 @@ def main():
             print('! X интерполяции должны быть отсортированы. Введите еще раз.')
         else:
             break
-
+    print("иксы:   ", *xs, sep="  ")
+    print("угреки: ", *ys, sep="  ")
     solve(xs, ys, x, n)
 
 
