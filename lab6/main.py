@@ -263,14 +263,15 @@ def solve(f, x0, xn, y0, n, eps, exact_y):
                ("Метод Рунге-Кутта 4-го порядка", fourth_order_runge_kutt),
                ("Метод Милна", milne)]
     for method in methods:
-        ys = method[1](f, xs, y0, eps, exact_y, n)
+        method[1](f, xs, y0, eps, exact_y, n)
 
 
 def main():
     print("ОДУ:")
     print('1. y + (1 + x)*y^2')
     print('2. sin(x) - y')
-    print('3. e^x\n')
+    print('3. e^x')
+    print('4. x - y\n')
     while True:
         try:
             input_func = int(input('> Выберите ОДУ [1/2/3]: '))
@@ -287,6 +288,10 @@ def main():
                 f = lambda x, y: exp(x)
                 exact_y = lambda x, x0, y0: y0 - exp(x0) + exp(x)
                 break
+            elif input_func == 4:
+                f = lambda x, y: x - y
+                exact_y = lambda x, x0, y0: (exp(x0)* y0 + (1 - x0) * exp(x0)) / exp(x) + x - 1
+                break
             else:
                 print("! Некорректный ввод. Попробуйте еще раз\n")
         except:
@@ -295,8 +300,8 @@ def main():
         try:
             x0 = float(input('> Введите первый элемент интервала x0: '))
             xn = float(input('> Введите последний элемент интервала xn: '))
-            n = int(input('> Введите количество элементов в интервале n: '))
-
+            h = float(input('> Введите шаг интервала h: '))
+            n = int((xn - x0)/h)
             y0 = float(input('> Введите y0: '))
             eps = float(input('> Введите точность eps: '))
 
