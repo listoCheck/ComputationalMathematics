@@ -5,6 +5,7 @@ from tabulate import tabulate
 
 MAX_ITERS = 20
 
+
 def improved_euler(f, xs_orig, y0, eps, exact_y, n):
     name = "Усовершенствованный метод Эйлера"
     print('\n', name)
@@ -13,7 +14,7 @@ def improved_euler(f, xs_orig, y0, eps, exact_y, n):
     iters = 1
     ni = n
     x_start, x_end = xs_orig[0], xs_orig[-1]
-
+    ys_orig = [y0]
     while inaccuracy > eps:
         h = (x_end - x_start) / ni
         xs = [x_start + i * h for i in range(ni + 1)]
@@ -33,7 +34,6 @@ def improved_euler(f, xs_orig, y0, eps, exact_y, n):
             euler = ys_half[i] + h_half * f_pred
             y_next = ys_half[i] + h_half / 2 * (f_pred + f(xs_half[i + 1], euler))
             ys_half.append(y_next)
-
         runge_errors = []
         for i in range(1, ni + 1):
             y_h = ys[i]
@@ -46,25 +46,30 @@ def improved_euler(f, xs_orig, y0, eps, exact_y, n):
             break
         iters += 1
         ni *= 2
-
     table = []
-    for i in range(ni + 1):
-        xi = xs[i]
-        yi = ys[i]
-        f_val = f(xi, yi)
-        exact = exact_y(xi, x_start, y0)
-        row = [
-            i,
-            f"{xi:.5f}",
-            f"{yi:.5f}",
-            f"{f_val:.5f}",
-            f"{exact:.5f}"
-        ]
-        if i > 0:
-            row.append(f"{runge_errors[i - 1]:.5e}")
-        else:
-            row.append("-")
-        table.append(row)
+    # print(ys_orig)
+    h = (x_end - x_start) / n
+    c = 1
+    for i in range(len(xs) - 1):
+        if xs[i] % h == 0:
+            xi = xs[i]
+            yi = ys[i]
+            # print(xi, yi)
+            f_val = f(xi, yi)
+            exact = exact_y(xi, x_start, y0)
+            row = [
+                c,
+                f"{xi:.5f}",
+                f"{yi:.5f}",
+                f"{f_val:.5f}",
+                f"{exact:.5f}"
+            ]
+            if i > 0:
+                row.append(f"{runge_errors[i - 1]:.5e}")
+            else:
+                row.append("-")
+            table.append(row)
+            c += 1
 
     headers = ["i", "xi", "yi", "f(xi, yi)", "Точное решение", "Оценка погрешности (Рунге)"]
     print(tabulate(table, headers=headers, tablefmt="grid"))
@@ -83,20 +88,26 @@ def fourth_order_runge_kutt(f, xs_orig, y0, eps, exact_y, n):
     iters = 1
     ni = n
     x_start, x_end = xs_orig[0], xs_orig[-1]
-
+    ys_orig = [y0]
     while inaccuracy > eps:
         h = (x_end - x_start) / ni
         xs = [x_start + i * h for i in range(ni + 1)]
         ys = [y0]
 
-        for i in range(ni):
-            k1 = h * f(xs[i], ys[i])
-            k2 = h * f(xs[i] + h / 2, ys[i] + k1 / 2)
-            k3 = h * f(xs[i] + h / 2, ys[i] + k2 / 2)
-            k4 = h * f(xs[i] + h, ys[i] + k3)
-            y_next = ys[i] + (k1 + 2 * k2 + 2 * k3 + k4) / 6
-            ys.append(y_next)
-
+        try:
+            for i in range(ni):
+                k1 = h * f(xs[i], ys[i])
+                k2 = h * f(xs[i] + h / 2, ys[i] + k1 / 2)
+                k3 = h * f(xs[i] + h / 2, ys[i] + k2 / 2)
+                k4 = h * f(xs[i] + h, ys[i] + k3)
+                y_next = ys[i] + (k1 + 2 * k2 + 2 * k3 + k4) / 6
+                ys.append(y_next)
+                if iters % n == 0:
+                    ys_orig.append(y_next)
+        except:
+            iters += 1
+            ni *= 2
+            continue
         h_half = h / 2
         xs_half = [x_start + i * h_half for i in range(2 * ni + 1)]
         ys_half = [y0]
@@ -120,30 +131,37 @@ def fourth_order_runge_kutt(f, xs_orig, y0, eps, exact_y, n):
             break
         iters += 1
         ni *= 2
-
+    print("ys", ys_orig)
     table = []
-    for i in range(ni + 1):
-        xi = xs[i]
-        yi = ys[i]
-        f_val = f(xi, yi)
-        exact = exact_y(xi, x_start, y0)
-        row = [
-            i,
-            f"{xi:.5f}",
-            f"{yi:.5f}",
-            f"{f_val:.5f}",
-            f"{exact:.5f}"
-        ]
-        if i > 0:
-            row.append(f"{runge_errors[i - 1]:.5e}")
-        else:
-            row.append("-")
-        table.append(row)
+    h = (x_end - x_start) / n
+    c = 1
+    for i in range(len(xs) - 1):
+        if xs[i] % h == 0:
+            xi = xs[i]
+            yi = ys[i]
+            # print(xi, yi)
+            f_val = f(xi, yi)
+            exact = exact_y(xi, x_start, y0)
+            row = [
+                c,
+                f"{xi:.5f}",
+                f"{yi:.5f}",
+                f"{f_val:.5f}",
+                f"{exact:.5f}"
+            ]
+            if i > 0:
+                row.append(f"{runge_errors[i - 1]:.5e}")
+            else:
+                row.append("-")
+            table.append(row)
+            c += 1
 
     headers = ["i", "xi", "yi", "f(xi, yi)", "Точное решение", "Оценка погрешности (Рунге)"]
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
     draw_approx_vs_exact(xs, ys, exact_y, name, x_start, y0)
+    print(
+        f"\nДля точности eps={eps} интервал был разбит на n={ni} частей с шагом h={round((xs[-1] - xs[0]) / ni, 6)} за {iters} итераций.\n")
     print("=" * 100, '\n')
 
 
@@ -156,7 +174,8 @@ def milne(f, xs_orig, y0, eps, exact_y, n):
     iters = 0
     ni = n
     x_start, x_end = xs_orig[0], xs_orig[-1]
-
+    ys_orig = [y0]
+    errors = []
     while inaccuracy > eps and iters < MAX_ITERS:
         h = (x_end - x_start) / ni
         xs = [x_start + i * h for i in range(ni + 1)]
@@ -168,52 +187,116 @@ def milne(f, xs_orig, y0, eps, exact_y, n):
             k3 = h * f(xs[i - 1] + h / 2, y[i - 1] + k2 / 2)
             k4 = h * f(xs[i - 1] + h, y[i - 1] + k3)
             y.append(y[i - 1] + (k1 + 2 * k2 + 2 * k3 + k4) / 6)
-
+            ys_orig.append(y[i - 1] + (k1 + 2 * k2 + 2 * k3 + k4) / 6)
         for i in range(4, len(xs)):
             yp = y[i - 4] + 4 * h * (
-                2 * f(xs[i - 3], y[i - 3])
-                - f(xs[i - 2], y[i - 2])
-                + 2 * f(xs[i - 1], y[i - 1])
+                    2 * f(xs[i - 3], y[i - 3])
+                    - f(xs[i - 2], y[i - 2])
+                    + 2 * f(xs[i - 1], y[i - 1])
             ) / 3
 
             y_next = yp
             while True:
                 yc = y[i - 2] + h * (
-                    f(xs[i - 2], y[i - 2])
-                    + 4 * f(xs[i - 1], y[i - 1])
-                    + f(xs[i], y_next)
+                        f(xs[i - 2], y[i - 2])
+                        + 4 * f(xs[i - 1], y[i - 1])
+                        + f(xs[i], y_next)
                 ) / 3
                 if abs(yc - y_next) < eps:
                     y_next = yc
                     break
                 y_next = yc
             y.append(y_next)
+            if iters % n != 0:
+                ys_orig.append(y_next)
 
         max_abs_error = 0
         for i in range(len(xs)):
             y_exact = exact_y(xs[i], x_start, y0)
             abs_error = abs(y_exact - y[i])
             max_abs_error = max(max_abs_error, abs_error)
-
+            errors.append(abs_error)
         inaccuracy = max_abs_error
-        if inaccuracy <= eps or iters >= MAX_ITERS:
+
+        #print(inaccuracy)
+        if inaccuracy <= eps:
             break
         iters += 1
         ni *= 2
 
     table = []
+    h = (x_end - x_start) / n
+    c = 1
+    print("h = ", h)
+    for i in range(len(xs)):
+        if xs[i] % h == 0:
+            y_exact = exact_y(xs[i], x_start, y0)
+            abs_error = abs(y_exact - y[i])
+            err = errors[i]
+            if err == 0:
+                err = abs(y_exact - y[i])
+            row = [
+                c,
+                f"{xs[i]:.5f}",
+                f"{y[i]:.5f}",
+                f"{f(xs[i], y[i]):.5f}",
+                f"{y_exact:.5f}",
+                err
+            ]
+            table.append(row)
+            c += 1
+    headers = ["i", "xi", "yi", "f(xi, yi)", "Точное решение", "Абсолютная ошибка"]
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+    print()
+    print("A" * 100)
+    print("h = ", h / 2)
+    c = 1
+    table = []
+    for i in range(len(xs)):
+        if xs[i] % (h / 2) == 0:
+            y_exact = exact_y(xs[i], x_start, y0)
+            abs_error = abs(y_exact - y[i])
+            err = errors[i + n]
+            if err == 0:
+                err = abs(y_exact - y[i])
+            if i == 0:
+                err = 0
+
+            row = [
+                c,
+                f"{xs[i]:.5f}",
+                f"{y[i]:.5f}",
+                f"{f(xs[i], y[i]):.5f}",
+                f"{y_exact:.5f}",
+                err
+            ]
+            table.append(row)
+            c += 1
+    headers = ["i", "xi", "yi", "f(xi, yi)", "Точное решение", "Абсолютная ошибка"]
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+    print()
+    print("A" * 100)
+    print("h = ", h / 4)
+    table = []
+    c = 1
     for i in range(len(xs)):
         y_exact = exact_y(xs[i], x_start, y0)
+        err = errors[i + 3 * n]
+        if err == 0:
+            err = abs(y_exact - y[i])
+        if i == 0:
+            err = 0
         abs_error = abs(y_exact - y[i])
         row = [
-            i,
+            c,
             f"{xs[i]:.5f}",
             f"{y[i]:.5f}",
             f"{f(xs[i], y[i]):.5f}",
             f"{y_exact:.5f}",
-            f"{abs_error:.5e}"
+            err
         ]
         table.append(row)
+        c += 1
 
     headers = ["i", "xi", "yi", "f(xi, yi)", "Точное решение", "Абсолютная ошибка"]
     print(tabulate(table, headers=headers, tablefmt="grid"))
@@ -223,9 +306,9 @@ def milne(f, xs_orig, y0, eps, exact_y, n):
         print(f"Точность НЕ достигнута: погрешность {max_abs_error:.5e} > {eps}")
 
     draw_approx_vs_exact(xs, y, exact_y, name, xs[0], y0)
+    print(
+        f"\nДля точности eps={eps} интервал был разбит на n={ni} частей с шагом h={round((xs[-1] - xs[0]) / ni, 6)} за {iters} итераций.\n")
     print("=" * 100, '\n')
-
-
 
 
 """def draw_plot(a, b, func, name, dx=0.001):
@@ -274,7 +357,7 @@ def main():
     print('4. x - y\n')
     while True:
         try:
-            input_func = int(input('> Выберите ОДУ [1/2/3]: '))
+            input_func = int(input('> Выберите ОДУ [1/2/3/4]: '))
             if input_func == 1:
                 f = lambda x, y: y + (1 + x) * y ** 2
                 exact_y = lambda x, x0, y0: -exp(x) / (x * exp(x) - (x0 * exp(x0) * y0 + exp(x0)) / y0)
@@ -290,7 +373,7 @@ def main():
                 break
             elif input_func == 4:
                 f = lambda x, y: x - y
-                exact_y = lambda x, x0, y0: (exp(x0)* y0 + (1 - x0) * exp(x0)) / exp(x) + x - 1
+                exact_y = lambda x, x0, y0: (exp(x0) * y0 + (1 - x0) * exp(x0)) / exp(x) + x - 1
                 break
             else:
                 print("! Некорректный ввод. Попробуйте еще раз\n")
@@ -301,7 +384,7 @@ def main():
             x0 = float(input('> Введите первый элемент интервала x0: '))
             xn = float(input('> Введите последний элемент интервала xn: '))
             h = float(input('> Введите шаг интервала h: '))
-            n = int((xn - x0)/h)
+            n = int((xn - x0) / h)
             y0 = float(input('> Введите y0: '))
             eps = float(input('> Введите точность eps: '))
 
